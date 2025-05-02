@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '../../../../lib/prisma';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '../../../../src/lib/auth';
+
+// Define type for task filters
+interface TaskFilters {
+  userId: string;
+  projectId?: string;
+  status?: string;
+}
 
 // GET /api/tasks
 export async function GET(req: NextRequest) {
@@ -16,7 +23,7 @@ export async function GET(req: NextRequest) {
     const projectId = url.searchParams.get('projectId');
     const status = url.searchParams.get('status');
     
-    const filters: any = {
+    const filters: TaskFilters = {
       userId: session.user.id,
     };
     

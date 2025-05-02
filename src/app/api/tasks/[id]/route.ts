@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '../../../../../lib/prisma';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../../../../src/lib/auth';
 
 // GET /api/tasks/[id]
 export async function GET(
@@ -82,7 +82,7 @@ export async function PATCH(
     // Update task and related data in a transaction
     const updatedTask = await prisma.$transaction(async (prisma) => {
       // Update basic task info
-      const task = await prisma.task.update({
+      await prisma.task.update({
         where: { id: taskId },
         data: {
           title: title !== undefined ? title : undefined,
@@ -167,13 +167,13 @@ export async function DELETE(
     const taskId = params.id;
     
     // Check if task exists
-    const existingTask = await prisma.task.findUnique({
+    const taskExists = await prisma.task.findUnique({
       where: {
         id: taskId,
       },
     });
     
-    if (!existingTask) {
+    if (!taskExists) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
     

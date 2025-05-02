@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import prisma from '../../../../lib/prisma';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '../../../../src/lib/auth';
 
 // GET /api/projects
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     
@@ -12,11 +12,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const userId = session.user.id as string;
-    
     const projects = await prisma.project.findMany({
       where: {
-        userId,
+        userId: session.user.id,
       },
       include: {
         tasks: true,
@@ -39,17 +37,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const userId = session.user.id as string;
     const body = await req.json();
+    const { name, description } = body;
     
-    const { name, description, color } = body;
+    if (!name) {
+      return NextResponse.json(
+        { error: 'Name is required' },
+        { status: 400 }
+      );
+    }
     
     const project = await prisma.project.create({
       data: {
         name,
         description,
-        color,
-        userId,
+        userId: session.user.id,
       },
     });
     
